@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Yue Pan" />
+
+<meta name="date" content="2022-08-15" />
+
+<title>A new Poisson probability paradigm for single cell RNA-seq clustering</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">A new Poisson probability paradigm for
+single cell RNA-seq clustering</h1>
+<h4 class="author">Yue Pan</h4>
+<h4 class="date">2022-08-15</h4>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>This package is developed to visualize the Poissoneity of scRNA-seq
+UMI data, and explore cell clustering based on model departure as a
+novel data representation.</p>
+<p>In the following sections, we introduce the approach for assessment
+of the validity of the independent Poisson statistical framework using
+Q-Q envelope plots. The code here is specific for validation of
+independent Poisson distributions of scRNA-seq data matrix entries, but
+such idea can be applied to different types of data under different
+assumptions of distributions.</p>
+<p>Then we propose using model departure as a novel data representation,
+which is a measurement of relative location of that UMI count with
+respect to the independent Poisson distribution at the individual entry
+level. A departure-based cell clustering algorithm is developed to
+explore cell subpopulations.</p>
+</div>
+<div id="installing" class="section level1">
+<h1>Installing</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scpoisson)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code></pre></div>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span></code></pre></div>
+</div>
+<div id="poissoneity-of-scrna-seq-data" class="section level1">
+<h1>Poissoneity of scRNA-seq data</h1>
+<p>ScRNA-seq data contains a large number of zeros, which makes the
+simple multiplication ineffective because zeros are not appropriately
+scaled by multiplication, motivating new statistical approaches. Here,
+we propose a different, more principled approach. Instead of focusing on
+gene averages and working with normalized and scaled counts data, we
+prioritize the individual UMI matrix entries. This approach is based on
+an independent Poisson statistical framework, where each RNA
+measurements for each cell comes from its own Poisson distribution.</p>
+<p>In the following example, we show how to visualize the Poissoneity of
+scRNA-seq UMI data by Q-Q envelope plots. The envelopes are generated
+from theoretical distribution, which provide a quantitative way
+measuring deviation from the diagonal line. If the theoretical
+distribution fits the data well, the curve should be located around the
+diagonal line and within the envelope.</p>
+<p>The GLM-PCA algorithm is applied for parameter estimation. Then some
+matrix entries (default 200, with estimated Poisson parameters closest
+to the given Poisson parameter) will be selected as sample data and
+compare with the theoretical Poisson distribution. The sample data we
+provided in this package contains 75 cells from one clonal cell line.
+Here we take <span class="math inline">\(L=10\)</span> since that is
+shown to be an appropriate number of latent vectors for this relatively
+homogeneous data set. In practice, we suggest try a range of <span class="math inline">\(L\)</span> and find the one which gives best fit.
+This number can be different for different data sets. As long as there
+exists such an <span class="math inline">\(L\)</span>, which gives
+reasonable fit under the Poisson statistical framework, that
+demonstrates the “Poissoneity” of such data set.</p>
+<p>The similar idea can be used to visualize different types of data
+under different assumptions of distributions.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># UMI count matrix</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>test_dat <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">get_example_data</span>(<span class="st">&quot;p5&quot;</span>))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>scppp_obj <span class="ot">&lt;-</span> <span class="fu">scppp</span>(test_dat, <span class="st">&quot;rows&quot;</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Q-Q envelope plot</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">qqplot_env_pois</span>(scppp_obj, <span class="at">L =</span> <span class="dv">10</span>, <span class="at">lambda =</span> <span class="dv">5</span>) </span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>As shown the the above figure, the aggregated 200 matrix entries were
+well fitted by Poisson distribution with parameter 5, i.e. these entries
+can be regarded as independent random samples generated from Poisson
+distribution with mean 5.</p>
+</div>
+<div id="cell-clustering-based-on-model-departure" class="section level1">
+<h1>Cell clustering based on model departure</h1>
+<p>A major application of this concept “Poissoneity” is clustering using
+a model departure as data representation.</p>
+<p>The initial step is based on a crude two-way parameter approximation,
+where variation across cells is modeled by cell level parameters, and
+variation across genes is modeled by gene level parameters. This initial
+step in itself does not appropriately account for cell heterogeneity
+(different cell types). In the next step such interesting structure is
+captured by departures from the naive two-way approximation and the
+original count matrix is replaced by a Poisson departure matrix. In the
+departure matrix, each entry is quantified by the relative location of
+that original count with respect to the tentative Poisson distribution,
+whose parameter comes from the initial two-way approximation. The
+departure measure is captured by a Cumulative Distribution Function
+(CDF), which leaves the unexpectedly small counts nearly 0 and unusually
+large counts close to 1. Next, the departure measure is put on a more
+statistically amenable scale using the logit function. As a result,
+unexpectedly large counts give large positive values and unexpectedly
+small counts give large negative values. This departure matrix forms the
+input for cell clustering as a downstream analysis.</p>
+<p>The following example shows how to run our clustering pipeline using
+a model departure as data representation. In this simple case, set
+number of simulations <span class="math inline">\(sim = 100\)</span> is
+enough to separate the two known cell lines (71 cells from BCBL cell
+line and 58 from JSC cell line). For more complicated data sets, we
+suggest set the number of simulations to 500 or 1000 for more reliable
+clustering results.</p>
+<p>The clustering results are stored in object scppp under
+“clust_results”. You can refer to “Hclust” under that for more
+details.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># UMI count matrix</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>test_dat <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">get_example_data</span>(<span class="st">&quot;p56&quot;</span>))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>scppp_obj <span class="ot">&lt;-</span> <span class="fu">scppp</span>(test_dat, <span class="st">&quot;rows&quot;</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>scppp_obj <span class="ot">&lt;-</span> <span class="fu">HclustDepart</span>(scppp_obj, <span class="at">maxSplit =</span> <span class="dv">3</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># cluster label for each cell</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>clust_res <span class="ot">&lt;-</span> scppp_obj[[<span class="st">&quot;clust_results&quot;</span>]]<span class="sc">$</span>Hclust[[<span class="dv">1</span>]]</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(clust_res)</span></code></pre></div>
+<pre><code>##          names cluster
+## 1 Plate05A_A02       1
+## 2 Plate05A_A03       1
+## 3 Plate05A_A04       1
+## 4 Plate05A_A05       1
+## 5 Plate05A_A06       1
+## 6 Plate05A_A08       1</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(clust_res[,<span class="dv">2</span>])</span></code></pre></div>
+<pre><code>## 
+##  1  2 
+## 71 58</code></pre>
+<p>The model departure data representation can also be fitted into any
+other clustering pipeline. Another option contained in this package is:
+keep departure as data representation but apply the Louvain algorithm
+(implemented in Seurat pipeline) for clustering. In general, this is a
+faster clustering algorithm to do clustering. However, it requires
+carefully tuning about resolution parameter, which can lead to different
+clustering results for the same data set. In this simple case, keeping
+the default resolution parameter (0.8) gives the correct clustering
+results as known cell lines.</p>
+<p>The clustering results are also stored in object scppp under
+“clust_results”. You can refer to “Lclust” under that for more
+details.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>scppp_obj <span class="ot">&lt;-</span> <span class="fu">LouvainDepart</span>(scppp_obj)</span></code></pre></div>
+<pre><code>## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 129
+## Number of edges: 3799
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.5998
+## Number of communities: 2
+## Elapsed time: 0 seconds</code></pre>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cluster label for each cell</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>clust_res2 <span class="ot">&lt;-</span> scppp_obj[[<span class="st">&quot;clust_results&quot;</span>]]<span class="sc">$</span>Lclust[[<span class="dv">4</span>]]</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(clust_res2)</span></code></pre></div>
+<pre><code>##                     names cluster
+## Plate05A_A02 Plate05A_A02       0
+## Plate05A_A03 Plate05A_A03       0
+## Plate05A_A04 Plate05A_A04       0
+## Plate05A_A05 Plate05A_A05       0
+## Plate05A_A06 Plate05A_A06       0
+## Plate05A_A08 Plate05A_A08       0</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(clust_res2[,<span class="dv">2</span>])</span></code></pre></div>
+<pre><code>## 
+##  0  1 
+## 71 58</code></pre>
+</div>
+<div id="references" class="section level1">
+<h1>References</h1>
+<p>Townes, F. W., Hicks, S. C., Aryee, M. J., &amp; Irizarry, R. A.
+(2019). Feature selection and dimension reduction for single-cell
+RNA-Seq based on a multinomial model. Genome biology, 20(1), 1-16.</p>
+<p>Stuart T, Butler A, Hoffman P, Hafemeister C, Papalexi E, III WMM,
+Hao Y, Stoeckius M, Smibert P, Satija R (2019). “Comprehensive
+Integration of Single-Cell Data.” Cell, 177, 1888-1902. doi:
+10.1016/j.cell.2019.05.031, <a href="https://doi.org/10.1016/j.cell.2019.05.031" class="uri">https://doi.org/10.1016/j.cell.2019.05.031</a>.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
